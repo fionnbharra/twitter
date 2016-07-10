@@ -221,11 +221,13 @@ module Twitter
       # @option options [String] :place_id A place in the world. These IDs can be retrieved from {Twitter::REST::PlacesAndGeo#reverse_geocode}.
       # @option options [String] :display_coordinates Whether or not to put a pin on the exact coordinates a tweet has been sent from.
       # @option options [Boolean, String, Integer] :trim_user Each tweet returned in a timeline will include a user object with only the author's numerical ID when set to true, 't' or 1.
+      # @option options [String, Array<String>] :alt_text Alt text for the image(s)
       def update_with_media(status, media, options = {})
         options = options.dup
         media_ids = pmap(array_wrap(media)) do |medium|
           upload(medium)[:media_id]
         end
+        add_alt_text_to_media(media_ids, options[:alt_text]) if options[:alt_text]
         update!(status, options.merge(media_ids: media_ids.join(',')))
       end
 
@@ -359,6 +361,14 @@ module Twitter
           object.to_ary || [object]
         else
           [object]
+        end
+      end
+
+      def add_alt_text_to_media(media_ids, alt_text)
+        array_wrap(media_ids).each_with_index do |media_id, index|
+          next if alt_text[index].nil? || alt_text[index].empty?
+          hash = {media_id: media_id, alt_text: {text: alt_text}}
+          perform_post_with_object('/1.1/media/metadata/create.json', hash, Twitter::Tweet)
         end
       end
 

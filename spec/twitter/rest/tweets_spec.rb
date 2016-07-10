@@ -466,6 +466,15 @@ describe Twitter::REST::Tweets do
         expect(a_post('/1.1/statuses/update.json')).to have_been_made
       end
     end
+    context 'with alt text' do
+      it 'requests the correct resource' do
+        stub_request(:post, 'https://api.twitter.com/1.1/media/metadata/create.json').to_return(body: '', headers: {content_type: 'application/json; charset=utf-8'})
+        @client.update_with_media('You always have options', fixture('me.jpeg'), alt_text: 'some text')
+        expect(a_request(:post, 'https://upload.twitter.com/1.1/media/upload.json')).to have_been_made
+        expect(a_post('/1.1/statuses/update.json')).to have_been_made
+      end
+    end
+
   end
 
   describe '#oembed' do
